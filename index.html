@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Share Quantity & Capital Deployed Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2em;
+      background-color: #f4f4f4;
+    }
+    h1 {
+      color: #333;
+    }
+    form {
+      background: #fff;
+      padding: 1em 2em;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 400px;
+    }
+    label {
+      display: block;
+      margin-top: 1em;
+    }
+    input {
+      width: 100%;
+      padding: 0.5em;
+      margin-top: 0.5em;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 1.5em;
+      padding: 0.7em 1.2em;
+      background-color: #28a745;
+      color: #fff;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 1em;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    .result {
+      margin-top: 1em;
+      font-size: 1.1em;
+      font-weight: bold;
+      color: #333;
+      background: #fff;
+      padding: 1em;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 400px;
+    }
+    .result ul {
+      list-style: none;
+      padding: 0;
+    }
+    .result li {
+      margin-bottom: 0.5em;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>Share Quantity & Capital Deployed Calculator</h1>
+  <form id="calculatorForm">
+    <label for="portfolioValue">Total Portfolio Value ($):</label>
+    <input type="number" id="portfolioValue" required step="any" min="0" placeholder="e.g., 10000">
+
+    <label for="buyPrice">Buy Price ($):</label>
+    <input type="number" id="buyPrice" required step="any" min="0" placeholder="e.g., 50">
+
+    <label for="stopLoss">Stop Loss Price ($):</label>
+    <input type="number" id="stopLoss" required step="any" min="0" placeholder="e.g., 45">
+
+    <button type="submit">Calculate</button>
+  </form>
+  
+  <div class="result" id="result"></div>
+  
+  <script>
+    document.getElementById("calculatorForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      
+      // Retrieve input values and convert to numbers
+      const portfolioValue = parseFloat(document.getElementById("portfolioValue").value);
+      const buyPrice = parseFloat(document.getElementById("buyPrice").value);
+      const stopLoss = parseFloat(document.getElementById("stopLoss").value);
+      const resultDiv = document.getElementById("result");
+
+      // Validate that buy price is greater than stop loss price
+      if (buyPrice <= stopLoss) {
+        resultDiv.innerHTML = '<span class="error">Error: Buy Price must be greater than Stop Loss Price.</span>';
+        return;
+      }
+      
+      // Calculate risk per trade (1% of portfolio)
+      const riskMoney = portfolioValue * 0.01;
+      
+      // Calculate risk per share
+      const riskPerShare = buyPrice - stopLoss;
+      
+      // Calculate share quantity (rounding down to whole shares)
+      const shareQty = Math.floor(riskMoney / riskPerShare);
+      
+      // Calculate total capital deployed (share quantity * buy price)
+      const deployedCapital = shareQty * buyPrice;
+      
+      // Format numbers to two decimal places where needed
+      const formatCurrency = (num) => '$' + num.toFixed(2);
+      
+      // Build the results HTML
+      let output = '<ul>';
+      output += `<li><strong>Total Portfolio Value:</strong> ${formatCurrency(portfolioValue)}</li>`;
+      output += `<li><strong>Risk Money (1%):</strong> ${formatCurrency(riskMoney)}</li>`;
+      output += `<li><strong>Buy Price:</strong> ${formatCurrency(buyPrice)}</li>`;
+      output += `<li><strong>Stop Loss Price:</strong> ${formatCurrency(stopLoss)}</li>`;
+      output += `<li><strong>Risk per Share:</strong> ${formatCurrency(riskPerShare)}</li>`;
+      output += `<li><strong>Shares to Buy:</strong> ${shareQty}</li>`;
+      output += `<li><strong>Capital Deployed:</strong> ${formatCurrency(deployedCapital)}</li>`;
+      output += '</ul>';
+      
+      // Display the result
+      resultDiv.innerHTML = output;
+    });
+  </script>
+</body>
+</html>

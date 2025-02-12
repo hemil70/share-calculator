@@ -19,15 +19,22 @@
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
       max-width: 400px;
     }
-    label {
+    label, legend {
       display: block;
       margin-top: 1em;
+      font-weight: bold;
     }
-    input {
+    input[type="number"] {
       width: 100%;
       padding: 0.5em;
       margin-top: 0.5em;
       box-sizing: border-box;
+    }
+    fieldset {
+      border: 1px solid #ccc;
+      padding: 1em;
+      margin-top: 1em;
+      border-radius: 5px;
     }
     button {
       margin-top: 1.5em;
@@ -77,12 +84,51 @@
     <label for="stopLoss">Stop Loss Price ($):</label>
     <input type="number" id="stopLoss" required step="any" min="0" placeholder="e.g., 45">
 
+    <fieldset>
+      <legend>Risk Type</legend>
+      <label>
+        <input type="radio" name="riskType" value="percentage" checked>
+        Percentage Risk
+      </label>
+      <label>
+        <input type="radio" name="riskType" value="fixed">
+        Fixed Risk Amount
+      </label>
+    </fieldset>
+
+    <div id="percentageRiskField">
+      <label for="riskPercentage">Risk Percentage (%):</label>
+      <input type="number" id="riskPercentage" required step="any" min="0" placeholder="e.g., 1">
+    </div>
+
+    <div id="fixedRiskField" style="display: none;">
+      <label for="riskFixed">Fixed Risk Amount ($):</label>
+      <input type="number" id="riskFixed" step="any" min="0" placeholder="e.g., 100">
+    </div>
+
     <button type="submit">Calculate</button>
   </form>
   
   <div class="result" id="result"></div>
   
   <script>
+    // Toggle the display of risk input fields based on the selected risk type
+    document.querySelectorAll('input[name="riskType"]').forEach(radio => {
+      radio.addEventListener('change', function(e) {
+        if (e.target.value === "percentage") {
+          document.getElementById("percentageRiskField").style.display = "block";
+          document.getElementById("riskPercentage").required = true;
+          document.getElementById("fixedRiskField").style.display = "none";
+          document.getElementById("riskFixed").required = false;
+        } else {
+          document.getElementById("percentageRiskField").style.display = "none";
+          document.getElementById("riskPercentage").required = false;
+          document.getElementById("fixedRiskField").style.display = "block";
+          document.getElementById("riskFixed").required = true;
+        }
+      });
+    });
+
     document.getElementById("calculatorForm").addEventListener("submit", function(e) {
       e.preventDefault();
       
@@ -90,6 +136,16 @@
       const portfolioValue = parseFloat(document.getElementById("portfolioValue").value);
       const buyPrice = parseFloat(document.getElementById("buyPrice").value);
       const stopLoss = parseFloat(document.getElementById("stopLoss").value);
+      const riskType = document.querySelector('input[name="riskType"]:checked').value;
+      
+      let riskMoney;
+      if (riskType === "percentage") {
+        const riskPercentage = parseFloat(document.getElementById("riskPercentage").value);
+        riskMoney = portfolioValue * (riskPercentage / 100);
+      } else {
+        riskMoney = parseFloat(document.getElementById("riskFixed").value);
+      }
+
       const resultDiv = document.getElementById("result");
 
       // Validate that buy price is greater than stop loss price
@@ -97,9 +153,6 @@
         resultDiv.innerHTML = '<span class="error">Error: Buy Price must be greater than Stop Loss Price.</span>';
         return;
       }
-      
-      // Calculate risk per trade (1% of portfolio)
-      const riskMoney = portfolioValue * 0.01;
       
       // Calculate risk per share
       const riskPerShare = buyPrice - stopLoss;
@@ -110,13 +163,13 @@
       // Calculate total capital deployed (share quantity * buy price)
       const deployedCapital = shareQty * buyPrice;
       
-      // Format numbers to two decimal places where needed
+      // Function to format numbers as currency
       const formatCurrency = (num) => '$' + num.toFixed(2);
       
       // Build the results HTML
       let output = '<ul>';
       output += `<li><strong>Total Portfolio Value:</strong> ${formatCurrency(portfolioValue)}</li>`;
-      output += `<li><strong>Risk Money (1%):</strong> ${formatCurrency(riskMoney)}</li>`;
+      output += `<li><strong>Risk Money:</strong> ${formatCurrency(riskMoney)}</li>`;
       output += `<li><strong>Buy Price:</strong> ${formatCurrency(buyPrice)}</li>`;
       output += `<li><strong>Stop Loss Price:</strong> ${formatCurrency(stopLoss)}</li>`;
       output += `<li><strong>Risk per Share:</strong> ${formatCurrency(riskPerShare)}</li>`;

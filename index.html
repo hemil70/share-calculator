@@ -85,14 +85,14 @@
     <input type="number" id="stopLoss" required step="any" min="0" placeholder="e.g., 45">
 
     <fieldset>
-      <legend>Risk Type</legend>
+      <legend>Select Risk Type</legend>
       <label>
         <input type="radio" name="riskType" value="percentage" checked>
-        Percentage Risk
+        Percentage Risk (e.g., 1% of portfolio)
       </label>
       <label>
         <input type="radio" name="riskType" value="fixed">
-        Fixed Risk Amount
+        Fixed Amount Risk (e.g., $100/trade)
       </label>
     </fieldset>
 
@@ -113,60 +113,58 @@
   
   <script>
     // Toggle the display of risk input fields based on the selected risk type
-    document.querySelectorAll('input[name="riskType"]').forEach(radio => {
-      radio.addEventListener('change', function(e) {
-        if (e.target.value === "percentage") {
-          document.getElementById("percentageRiskField").style.display = "block";
-          document.getElementById("riskPercentage").required = true;
-          document.getElementById("fixedRiskField").style.display = "none";
-          document.getElementById("riskFixed").required = false;
+    const riskTypeRadios = document.querySelectorAll('input[name="riskType"]');
+    riskTypeRadios.forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        if (e.target.value === 'percentage') {
+          document.getElementById('percentageRiskField').style.display = 'block';
+          document.getElementById('riskPercentage').required = true;
+          document.getElementById('fixedRiskField').style.display = 'none';
+          document.getElementById('riskFixed').required = false;
         } else {
-          document.getElementById("percentageRiskField").style.display = "none";
-          document.getElementById("riskPercentage").required = false;
-          document.getElementById("fixedRiskField").style.display = "block";
-          document.getElementById("riskFixed").required = true;
+          document.getElementById('percentageRiskField').style.display = 'none';
+          document.getElementById('riskPercentage').required = false;
+          document.getElementById('fixedRiskField').style.display = 'block';
+          document.getElementById('riskFixed').required = true;
         }
       });
     });
 
-    document.getElementById("calculatorForm").addEventListener("submit", function(e) {
+    document.getElementById('calculatorForm').addEventListener('submit', function(e) {
       e.preventDefault();
-      
+
       // Retrieve input values and convert to numbers
-      const portfolioValue = parseFloat(document.getElementById("portfolioValue").value);
-      const buyPrice = parseFloat(document.getElementById("buyPrice").value);
-      const stopLoss = parseFloat(document.getElementById("stopLoss").value);
+      const portfolioValue = parseFloat(document.getElementById('portfolioValue').value);
+      const buyPrice = parseFloat(document.getElementById('buyPrice').value);
+      const stopLoss = parseFloat(document.getElementById('stopLoss').value);
       const riskType = document.querySelector('input[name="riskType"]:checked').value;
-      
       let riskMoney;
-      if (riskType === "percentage") {
-        const riskPercentage = parseFloat(document.getElementById("riskPercentage").value);
+
+      // Determine risk money based on the selected risk type
+      if (riskType === 'percentage') {
+        const riskPercentage = parseFloat(document.getElementById('riskPercentage').value);
         riskMoney = portfolioValue * (riskPercentage / 100);
       } else {
-        riskMoney = parseFloat(document.getElementById("riskFixed").value);
+        riskMoney = parseFloat(document.getElementById('riskFixed').value);
       }
 
-      const resultDiv = document.getElementById("result");
+      const resultDiv = document.getElementById('result');
 
-      // Validate that buy price is greater than stop loss price
+      // Validate that buyPrice is greater than stopLoss
       if (buyPrice <= stopLoss) {
         resultDiv.innerHTML = '<span class="error">Error: Buy Price must be greater than Stop Loss Price.</span>';
         return;
       }
-      
-      // Calculate risk per share
+
+      // Calculate risk per share, share quantity, and capital deployed
       const riskPerShare = buyPrice - stopLoss;
-      
-      // Calculate share quantity (rounding down to whole shares)
       const shareQty = Math.floor(riskMoney / riskPerShare);
-      
-      // Calculate total capital deployed (share quantity * buy price)
       const deployedCapital = shareQty * buyPrice;
-      
-      // Function to format numbers as currency
-      const formatCurrency = (num) => '$' + num.toFixed(2);
-      
-      // Build the results HTML
+
+      // Format numbers as currency
+      const formatCurrency = num => '$' + num.toFixed(2);
+
+      // Build and display the results
       let output = '<ul>';
       output += `<li><strong>Total Portfolio Value:</strong> ${formatCurrency(portfolioValue)}</li>`;
       output += `<li><strong>Risk Money:</strong> ${formatCurrency(riskMoney)}</li>`;
@@ -176,8 +174,7 @@
       output += `<li><strong>Shares to Buy:</strong> ${shareQty}</li>`;
       output += `<li><strong>Capital Deployed:</strong> ${formatCurrency(deployedCapital)}</li>`;
       output += '</ul>';
-      
-      // Display the result
+
       resultDiv.innerHTML = output;
     });
   </script>
